@@ -63,8 +63,8 @@ public class WeatherApp {
 			
 			//this gets the current temperature
 			JSONObject temperature = json.getJSONObject("main");
-			int temp = temperature.getInt("temp");
-			temp = ConvertTemperature(temp);
+			double temp2 = temperature.getDouble("temp");
+			int temp = ConvertTemp(temp2);
 			
 			//gets the current windspeed
 			JSONObject windSpeed = json.getJSONObject("wind");
@@ -75,17 +75,18 @@ public class WeatherApp {
 			
 			//the maximum temperature is found below
 			JSONObject tempMax = json.getJSONObject("main");
-			int maxTemp = tempMax.getInt("temp_max");
-			maxTemp = ConvertTemperature(maxTemp);
+			double max = tempMax.getDouble("temp_max");
+			int maxTemp = ConvertTemp(max);
 			
 			//the minimum temperature is found below
 			JSONObject tempMin = json.getJSONObject("main");
-			int minTemp = tempMin.getInt("temp_min");
-			minTemp = ConvertTemperature(minTemp);
+			//int minTemp = tempMin.getInt("temp_min");
+			double min = tempMin.getDouble("temp_min");
+			int minTemp = ConvertTemp(min);
 			
 			//checks if the user has specified for the data to be returned as SI. If so, it will print the statements in this loop
 			if (convert){
-				System.out.println("The current temperature is " + temp +" degrees celsius");
+				System.out.println("The current temperature is " + temp +" C");
 				System.out.println("The current windspeed is from the " + direction + " at " + speed + " m/s");
 				System.out.println("The High temperature was " + maxTemp + " C");
 				System.out.println("The low temperature was " + minTemp + " C");
@@ -118,23 +119,23 @@ public class WeatherApp {
 	 * @param temperature- The temperature that is returned from the OpenWeather API
 	 * @return
 	 */
-	public static int ConvertTemperature (int temperature){
+	public static int ConvertTemp (double temperature){
 		//checks if the user wanted the temperature to be in SI.
 		if (convert) {
 			//if so, converts to SI units
 			temperature = temperature - 273;
-			return temperature;
+			return (int) temperature;
 		}
 		//since the user does not want the value to be in SI, it is converted to imperial units
 		temperature = temperature - 273;
-		temperature = ((temperature * (9/5)) + 32);
-		return temperature;
+		temperature = ((temperature * (1.8)) + 32);
+		return (int) temperature;
 	}
 	
 	/**
-	 * This method takes in the windSpeed that was returned from the OpenWeather API and converts it to the type of weather
+	 * This method takes in the wind speed that was returned from the OpenWeather API and converts it to the type of weather
 	 * that the user has specified
-	 * @param windSpeed - The windspeed that was returned by the OpenWeather API
+	 * @param windSpeed - The wind Speed that was returned by the OpenWeather API
 	 * @return
 	 */
 	public static int ConvertWindSpeed (int windSpeed){
