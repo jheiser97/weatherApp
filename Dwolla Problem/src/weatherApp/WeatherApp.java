@@ -10,13 +10,43 @@ import java.util.Scanner;
 import org.apache.commons.io.IOUtils;
 import org.json.*;
 public class WeatherApp {
-	static boolean convert = false;	
+	
+	//value that represents if the user wants the values to be converted to the SI system or if they want the values to be returned in the imperial system.
+	private static boolean convert = false;	
+	
+											//INFORMATION ABOUT THE GLOBAL VARIABLES\\
+						//The following static values are global variables instead of local variables because
+						//it is possible for the API to not pass the wind direction angle if the wind is calm
+						//in that location. This means that in order to print the weather information in these
+						//locations, we will need to print the information in the catch statement. Because the
+						//catch statement cannot see the local variables in the try statement where we originally
+						//calculate these values, these variable must be global so that both the try and catch
+						//statements can access this information.
+	
+	
+	//integer that represents the angle that the wind is blowing from (0-360 degrees). 
+	private static int directionDegree = 0;
+	
+	//value that represents the current temperature in the location that the user has specified
+	private static int temp = 0;
+	
+	//integer that represents the maximum temperature in that location
+	private static int maxTemp = 0;
+	
+	//integer that represents the lowest temperature in that location
+	private static int minTemp = 0;
+	
+	//String that represents the direction that the wind is blowing from
+	private static String direction = "";
+	
+	//integer that represents the speed of the wind
+	private static int speed = 0;
 	
 	public static void main(String[] args) {
 		while (true){
-			//string that keeps track of user input. This input will either be a city or a signal to end the program
+			//string that keeps track of user input. This input will either be a city or a signal to end the program.
 			String location = "";
-			System.out.println("Please Enter a city to get its current weather conditions or type exit to end program");
+			System.out.println("Please Enter a city to get its current weather conditions or type Exit to end the program.");
 			Scanner s = new Scanner (System.in);
 			//waits for the user to place input
 			while (location.equals("")){
@@ -30,7 +60,7 @@ public class WeatherApp {
 					System.exit(0);
 		
 				}
-				System.out.println("Do you want SI (Celsius, m/s) or Imperial(Farenheit, mph)?");
+				System.out.println("Do you want SI units (Celsius, m/s) or Imperial units (Farenheit, mph)?");
 				System.out.println("Yes = SI, No = Imperial. This program defaults to Imperial if anything besides Yes is entered.");
 				//variable that keeps track of the unit that the user wants the weather to return as
 				String unit = s.nextLine();
@@ -40,12 +70,16 @@ public class WeatherApp {
 				}
 			}
 			getWeatherConditions(location);
-			//This resets the conversion to false. This is so if the user wants to lookup another city, it will not automatially 
+			//This resets the conversion to false. This is so if the user wants to lookup another city, it will not automatically 
 			//give the user SI units (since it would be true always otherwise).
 			convert = false;
 		}
 	}
 	
+	/**
+	 * This method calls the OpenWeatherMap API to get weather information from a certain location and prints the results to the user.
+	 * @param location The city that the user has requested weather information for.
+	 */
 	public static void getWeatherConditions (String location) {
 		try {
 			//Beginning part of the url that is used to connect to the OpenWeather API to get our data from
@@ -64,25 +98,26 @@ public class WeatherApp {
 			//this gets the current temperature
 			JSONObject temperature = json.getJSONObject("main");
 			double temp2 = temperature.getDouble("temp");
-			int temp = ConvertTemp(temp2);
-			
-			//gets the current windspeed
-			JSONObject windSpeed = json.getJSONObject("wind");
-			int speed = windSpeed.getInt("speed");
-			int directionDegree = windSpeed.getInt("deg");
-			speed = ConvertWindSpeed(speed);
-			String direction = FindWindDirection(directionDegree);
+			temp = ConvertTemp(temp2);
 			
 			//the maximum temperature is found below
 			JSONObject tempMax = json.getJSONObject("main");
 			double max = tempMax.getDouble("temp_max");
-			int maxTemp = ConvertTemp(max);
+			maxTemp = ConvertTemp(max);
+
 			
 			//the minimum temperature is found below
 			JSONObject tempMin = json.getJSONObject("main");
-			//int minTemp = tempMin.getInt("temp_min");
 			double min = tempMin.getDouble("temp_min");
-			int minTemp = ConvertTemp(min);
+			 minTemp = ConvertTemp(min);
+			
+			//gets the current windspeed
+			JSONObject windSpeed = json.getJSONObject("wind");
+			speed = windSpeed.getInt("speed");
+			directionDegree = windSpeed.getInt("deg");
+			speed = ConvertWindSpeed(speed);
+			//String direction = FindWindDirection(directionDegree);
+			direction = FindWindDirection(directionDegree);
 			
 			//checks if the user has specified for the data to be returned as SI. If so, it will print the statements in this loop
 			if (convert){
@@ -106,18 +141,28 @@ public class WeatherApp {
 			m.printStackTrace();
 		}
 		catch (JSONException j){
-			System.out.println("The JSON did not return as expected. The error location is displayed below.");
-			j.printStackTrace();
+			//since the wind is calm in this location, it will throw a JSONException (since it cannot find the wind degree
+			//this means that we must print the weather information in the catch statement instead of the try statement. 
+			if (convert){
+				System.out.println("The current temperature is " + temp +" C");
+				System.out.println("The current windspeed is from the " + direction + " at " + speed + " m/s");
+				System.out.println("The High temperature was " + maxTemp + " C");
+				System.out.println("The low temperature was " + minTemp + " C");
+			}
+			System.out.println("The current temperature is " + temp + " F");
+			System.out.println("The current windspeed is from the " + direction + " at " + speed + " mph");
+			System.out.println("The High temperature was " + maxTemp + " F");
+			System.out.println("The low temperature was " + minTemp + " F");
 		}
 		catch (IOException e){
-			System.out.println("Oops! That city doesn't exist. Try again.");
+			System.out.println("Oops! That city doesn't exist. Please Enter another location or try again.");
 		}
 	}
 	
 	/**
-	 * This method converts the temperature from Kelvin to Celsius or Farenheit (depends on user preference)
-	 * @param temperature- The temperature that is returned from the OpenWeather API
-	 * @return
+	 * This method converts the temperature from Kelvin to Celsius or Fahrenheit (depends on user preference).
+	 * @param temperature The temperature that is returned from the OpenWeather API.
+	 * @return Integer that represents the temperature in the proper unit that the user has set.
 	 */
 	public static int ConvertTemp (double temperature){
 		//checks if the user wanted the temperature to be in SI.
@@ -133,10 +178,9 @@ public class WeatherApp {
 	}
 	
 	/**
-	 * This method takes in the wind speed that was returned from the OpenWeather API and converts it to the type of weather
-	 * that the user has specified
-	 * @param windSpeed - The wind Speed that was returned by the OpenWeather API
-	 * @return
+	 * This method takes in the wind speed that was returned from the OpenWeather API and converts it mph if user wants imperial data returned.
+	 * @param windSpeed The wind Speed that was returned by the OpenWeather API.
+	 * @return Integer that represents the wind speed in the correct unit that the user specified.
 	 */
 	public static int ConvertWindSpeed (int windSpeed){
 		//checks to see if the user wants the values to be returned SI. if so, then the value returned by the OpenWeather API does not be changed.
@@ -148,10 +192,10 @@ public class WeatherApp {
 	}
 	
 	/**
-	 * This method converts the int that represents the degree that the wind is coming from and converts it to a String that represents the direction
-	 * that the wind is coming from
-	 * @param directionDegree - Integer that represents the degree that the wind is coming from (from 0-360)
-	 * @return
+	 * This method converts the integer that represents the degree that the wind is coming from and converts it to a String that represents the direction
+	 * that the wind is coming from.
+	 * @param directionDegree Integer that represents the degree that the wind is coming from (from 0-360).
+	 * @return String that represents the direction that the wind is blowing from.
 	 */
 	public static String FindWindDirection (int directionDegree){
 		//these values were calculated using this URL: http://snowfence.umn.edu/Components/winddirectionanddegreeswithouttable3.htm
