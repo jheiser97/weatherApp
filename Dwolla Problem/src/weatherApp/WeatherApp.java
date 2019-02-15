@@ -1,3 +1,6 @@
+/**
+ * @author Josh Heiser
+ */
 package weatherApp;
 
 import java.io.FileNotFoundException;
@@ -12,13 +15,13 @@ import org.json.*;
 public class WeatherApp {
 	
 	//value that represents if the user wants the values to be converted to the SI system or if they want the values to be returned in the imperial system.
-	private static boolean convert = false;	
+	protected static boolean convert = false;	
 	
 											//INFORMATION ABOUT THE GLOBAL VARIABLES\\
 						//The following static values are global variables instead of local variables because
 						//it is possible for the API to not pass the wind direction angle if the wind is calm
-						//in that location. This means that in order to print the weather information in these
-						//locations, we will need to print the information in the catch statement. Because the
+						//in that location. This means that in order to print the weather information when there
+						//is no wind, the weather information will need to be printed in the catch statement. Because the
 						//catch statement cannot see the local variables in the try statement where we originally
 						//calculate these values, these variable must be global so that both the try and catch
 						//statements can access this information.
@@ -60,7 +63,7 @@ public class WeatherApp {
 					System.exit(0);
 		
 				}
-				System.out.println("Do you want SI units (Celsius, m/s) or Imperial units (Farenheit, mph)?");
+				System.out.println("Do you want SI units (Celsius, m/s) or Imperial units (Fahrenheit, mph)?");
 				System.out.println("Yes = SI, No = Imperial. This program defaults to Imperial if anything besides Yes is entered.");
 				//variable that keeps track of the unit that the user wants the weather to return as
 				String unit = s.nextLine();
@@ -91,7 +94,7 @@ public class WeatherApp {
 			//goes to the URL, and stores the returned JSON as a JSONObject
 			JSONObject json = new JSONObject(IOUtils.toString(new URL(updatedURL), Charset.forName("UTF-8")));
 			
-			//gets the current condition at the location that the user has speicifed
+			//gets the current condition at the location that the user has specified
 			JSONObject condition = json.getJSONArray("weather").getJSONObject(0);
 			System.out.println("The current condition in " + location + " is " + condition.getString("description"));
 			
@@ -166,12 +169,14 @@ public class WeatherApp {
 	 */
 	public static int ConvertTemp (double temperature){
 		//checks if the user wanted the temperature to be in SI.
+		//Kelvin to Celsius = temperature - 273
 		if (convert) {
 			//if so, converts to SI units
 			temperature = temperature - 273;
 			return (int) temperature;
 		}
 		//since the user does not want the value to be in SI, it is converted to imperial units
+		//Celsius to Fahrenheit = (9/5 * temp) + 32
 		temperature = temperature - 273;
 		temperature = ((temperature * (1.8)) + 32);
 		return (int) temperature;
@@ -188,6 +193,7 @@ public class WeatherApp {
 			return windSpeed;
 		}
 		//since it is not in SI, it needs to be converted to Imperial units.
+		//conversion from m/s (what OpenweatherMap API returns) to mph = (speed * 2.237);
 		return windSpeed = (int) (windSpeed * 2.237);
 	}
 	
@@ -247,7 +253,7 @@ public class WeatherApp {
 			return "NW";
 		}
 		if (directionDegree >= 326 && directionDegree <= 348 ){
-			return "WNW";
+			return "NNW";
 		}
 		return "This is not a proper angle that can be used to calculate wind direction";
 	}

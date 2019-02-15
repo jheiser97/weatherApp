@@ -1,8 +1,10 @@
 language: java
-mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
-mvn test -B
- jdk:
+jdk: 
     -oraclejdk8
     -oraclejdk9
-    -openjdk8
- 
+cache:
+    directories:
+    - $HOME/.m2
+script:
+    -./mvnw clean install 
+    -bash < (curl -s https://codecov.io/bash)
