@@ -3,6 +3,5 @@ jdk: oraclejdk8
 cache:
     directories:
     - $HOME/.m2
-script:
-    -mvn clean install 
+after success:
     -bash < (curl -s https://codecov.io/bash)
