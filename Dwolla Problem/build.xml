@@ -20,6 +20,7 @@
         <path refid="JUnit 4.libraryclasspath"/>
     </path>
     <target name="init">
+    	<mkdir dir= "src"/>
         <mkdir dir="bin"/>
         <copy includeemptydirs="false" todir="bin">
             <fileset dir="src">
